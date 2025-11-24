@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: ecommerce_db
+    environment:
+      POSTGRES_DB: EcommerceDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  backend:
+    image: ecommerce-backend
+    build:
+      context: ./aspnet-core
+      dockerfile: Dockerfile
+    container_name: ecommerce_backend
+    depends_on:
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Default=Host=db;Port=5432;Database=EcommerceDb;Username=postgres;Password=postgres
+    ports:
+      - "44300:80"
+    restart: unless-stopped
+
+  frontend:
+    image: ecommerce-frontend
+    build:
+      context: ./angular
+      dockerfile: Dockerfile
+    container_name: ecommerce_frontend
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
